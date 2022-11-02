@@ -22,7 +22,7 @@ services:
       POSTGRES_DB: $POSTGRES_DB
     volumes:
       - db-postgres-volume:/var/lib/postgresql/data
-      - ./dbcreate.sql:/docker-entrypoint-initdb.d/dbcreate.sql # CREATE TABLES and INSERT Data
+      - ./dbcreate.sql:/docker-entrypoint-initdb.d/dbcreate.sql
 volumes:
   db-postgres-volume:
   logs:

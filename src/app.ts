@@ -7,6 +7,7 @@ dotenv.config();
 import fs from 'fs';
 import path from 'path';
 import morgan from 'morgan';
+import { poolDB } from './db/connection';
 
 import tradesRoutes from './routes/tradesRoutes';
 import queryRoutes from './routes/queryRoutes';
@@ -61,7 +62,7 @@ User.hasMany(Trade);
  * Server Activation
  */
 sequelize
-  .sync({ force: true })
+  .sync()
   .then(result => {
     app.listen(PORT, () => {
       console.log(
