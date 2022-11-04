@@ -6,7 +6,7 @@ const sequelize = new sequelize_1.Sequelize('postgres', 'postgres', '123', {
     dialect: 'postgres',
     port: 5432,
     define: {
-        timestamps: true,
+        timestamps: false,
     },
 });
 exports.default = sequelize;

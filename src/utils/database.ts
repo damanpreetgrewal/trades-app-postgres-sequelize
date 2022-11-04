@@ -4,6 +4,9 @@ const sequelize = new Sequelize('postgres', 'postgres', '123', {
   host: 'db-postgres',
   dialect: 'postgres',
   port: 5432,
+  define: {
+    timestamps: false,
+  },
 });
 
 export default sequelize;
