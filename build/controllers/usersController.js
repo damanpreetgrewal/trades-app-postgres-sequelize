@@ -22,7 +22,7 @@ const user_1 = __importDefault(require("../models/user"));
 // @access Public
 exports.getUsers = (0, express_async_handler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const users = yield user_1.default.findAll();
+        const users = yield user_1.default.findAll({ attributes: ['id', 'name'] });
         res.status(200).json(users);
     }
     catch (err) {
@@ -42,6 +42,8 @@ exports.postUser = (0, express_async_handler_1.default)((req, res, next) => __aw
         user_1.default
             .create({
             name: req.body.name,
+            createdAt: new Date(),
+            updatedAt: new Date(),
         })
             .then(user => {
             res.status(201).json({

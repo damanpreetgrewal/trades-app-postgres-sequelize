@@ -1,7 +1,7 @@
 {
   "name": "trades-app-postgres",
   "version": "1.0.0",
-  "description": "Trades REST API - PureFacts Take Home Task - Submitted By Damanpreet",
+  "description": "Trades REST API",
   "main": "app.ts",
   "scripts": {
     "start": "node ./build/app.js",
