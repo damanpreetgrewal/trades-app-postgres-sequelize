@@ -1,5 +1,7 @@
 import express, { Router } from 'express';
 import { body, check } from 'express-validator';
+import Trade from '../models/trade';
+import User from '../models/user';
 
 import {
   getTrades,
@@ -8,7 +10,6 @@ import {
   updateTrade,
   deleteTrade,
 } from '../controllers/tradesController';
-import { poolDB } from '../db/connection';
 
 const router: Router = express.Router();
 
@@ -42,13 +43,11 @@ router
           'Execution Type must be either buy or sell (case sensitive)'
         ),
       check('userId').custom(async (value, { req }) => {
-        return await poolDB
-          .query('SELECT * FROM Users WHERE id = $1', [value])
-          .then(userData => {
-            if (userData.rows.length === 0) {
-              return Promise.reject(`User with id : ${value} doesnt exist`);
-            }
-          });
+        return await User.findByPk(value).then(userData => {
+          if (userData === null) {
+            return Promise.reject(`User with id : ${value} doesnt exist`);
+          }
+        });
       }),
       check('executionDate')
         .isISO8601()
@@ -64,13 +63,11 @@ router
   .put(
     [
       check('userId').custom(async (value, { req }) => {
-        return await poolDB
-          .query('SELECT * FROM Users WHERE id = $1', [value])
-          .then(userData => {
-            if (userData.rows.length === 0) {
-              return Promise.reject(`User with id : ${value} doesnt exist`);
-            }
-          });
+        return await User.findByPk(value).then(userData => {
+          if (userData === null) {
+            return Promise.reject(`User with id : ${value} doesnt exist`);
+          }
+        });
       }),
       body('ticker')
         .not()
@@ -106,13 +103,11 @@ router
   .delete(
     [
       check('userId').custom(async (value, { req }) => {
-        return await poolDB
-          .query('SELECT * FROM Users WHERE id = $1', [value])
-          .then(userData => {
-            if (userData.rows.length === 0) {
-              return Promise.reject(`User with id : ${value} doesnt exist`);
-            }
-          });
+        return await User.findByPk(value).then(userData => {
+          if (userData === null) {
+            return Promise.reject(`User with id : ${value} doesnt exist`);
+          }
+        });
       }),
     ],
     deleteTrade

@@ -9,7 +9,7 @@ router.route('/').post(
   [
     check('userId')
       .custom(async (value, { req }) => {
-        return User.findByPk(value).then(userData => {
+        return await User.findByPk(value).then(userData => {
           if (userData === null) {
             return Promise.reject(`User with id : ${value} doesnt exist`);
           }
