@@ -7,7 +7,7 @@ dotenv.config();
 import fs from 'fs';
 import path from 'path';
 import morgan from 'morgan';
-import { poolDB } from './db/connection';
+
 
 import tradesRoutes from './routes/tradesRoutes';
 import queryRoutes from './routes/queryRoutes';
@@ -55,6 +55,7 @@ app.use(get404);
 
 app.use(errorHandler);
 
+//DB Relations
 Trade.belongsTo(User, { constraints: true, onDelete: 'CASCADE' });
 User.hasMany(Trade);
 
