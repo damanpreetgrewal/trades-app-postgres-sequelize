@@ -3,9 +3,7 @@ import asyncHandler from 'express-async-handler';
 import { validationResult } from 'express-validator';
 import CustomError from '../customTypes/errorType';
 import { formatDate } from '../utils/formatDate';
-import User from '../models/User';
-import Trade from '../models/Trade';
-import { poolDB } from '../db/connection';
+import Trade from '../models/trade';
 
 // @desc Get all Trades
 // @route GET /api/trades
@@ -93,19 +91,27 @@ export const postTrade = async (
       req.body.userId,
     ];
 
-    trade
-        .create({
-          name: req.body.name,
-        })
-        .then(user => {
-          res.status(201).json({
-            message: 'User posted successfully.',
-            user: {
-              id: user.id,
-              name: user.name,
-            },
-          });
-        });
+    Trade.create({
+      ticker: req.body.ticker,
+      amount: req.body.amount,
+      price: req.body.price,
+      executionType: req.body.executionType,
+      executionDate: req.body.executionDate,
+      userId: req.body.userId,
+    }).then(trade => {
+      res.status(201).json({
+        message: 'Trade posted successfully.',
+        trade: {
+          id: trade.id,
+          ticker: trade.ticker,
+          amount: Number(trade.amount),
+          price: Number(trade.price),
+          executionType: trade.executionType,
+          executionDate: formatDate(trade.executionDate),
+          userId: Number(trade.userId),
+        },
+      });
+    });
   } catch (err) {
     return next(err);
   }
@@ -130,95 +136,34 @@ export const updateTrade = async (
       throw error;
     }
 
-    let query = `SELECT t.*,u.name FROM Trades t INNER JOIN Users u on t.userid = u.id WHERE t.id = $1 ORDER BY 1 ASC`;
-    const queryResponse = await poolDB.query(query, [req.params.id]);
-    const trade = queryResponse.rows;
-    if (trade.length === 0) {
+    const trade = await Trade.findByPk(req.params.id);
+    if (trade === null) {
       res
         .status(200)
         .json({ message: `Trade with id: ${req.params.id} not found.` });
+    } else {
+      trade.ticker = req.body.ticker;
+      trade.amount = req.body.amount;
+      trade.price = req.body.price;
+      trade.executionType = req.body.executionType;
+      trade.executionDate = req.body.executionDate;
+      trade.userId = req.body.userId;
+
+      trade.save().then(trade => {
+        res.status(200).json({
+          message: 'Trade updated successfully.',
+          trade: {
+            id: trade.id,
+            ticker: trade.ticker,
+            amount: Number(trade.amount),
+            price: Number(trade.price),
+            executionType: trade.executionType,
+            executionDate: formatDate(trade.executionDate),
+            userId: Number(trade.userId),
+          },
+        });
+      });
     }
-
-    //Make sure the userId of the Trade matches the userId in the DB
-    if (trade[0].userid !== req.body.userId) {
-      throw new CustomError(
-        401,
-        'User who does not own the trade cannot update the trade',
-        []
-      );
-    }
-
-    if (trade[0].executiondate < new Date()) {
-      throw new CustomError(
-        401,
-        'Trades that have Execution Date in the past cannot be updated',
-        []
-      );
-    }
-
-    const reqBodyFields = Object.entries(req.body);
-
-    let updateQuery = 'UPDATE Trades SET ';
-    const values = [];
-    for (let i = 0; i < reqBodyFields.length; i++) {
-      switch (reqBodyFields[i][0]) {
-        case 'ticker':
-          i == reqBodyFields.length - 1
-            ? (updateQuery += `ticker = $${i + 1} `)
-            : (updateQuery += `ticker = $${i + 1}, `);
-          values.push(reqBodyFields[i][1]);
-          break;
-        case 'amount':
-          i == reqBodyFields.length - 1
-            ? (updateQuery += `amount = $${i + 1} `)
-            : (updateQuery += `amount = $${i + 1}, `);
-          values.push(reqBodyFields[i][1]);
-          break;
-        case 'price':
-          i == reqBodyFields.length - 1
-            ? (updateQuery += `price = $${i + 1} `)
-            : (updateQuery += `price = $${i + 1}, `);
-          values.push(reqBodyFields[i][1]);
-          break;
-        case 'executionType':
-          i == reqBodyFields.length - 1
-            ? (updateQuery += `executiontype = $${i + 1} `)
-            : (updateQuery += `executionType = $${i + 1}, `);
-          values.push(reqBodyFields[i][1]);
-          break;
-        case 'executionDate':
-          i == reqBodyFields.length - 1
-            ? (updateQuery += `executiondate = $${i + 1} `)
-            : (updateQuery += `executiondate = $${i + 1}, `);
-          values.push(reqBodyFields[i][1]);
-          break;
-        case 'userId':
-          i == reqBodyFields.length - 1
-            ? (updateQuery += `userid = $${i + 1} `)
-            : (updateQuery += `userid = $${i + 1}, `);
-          values.push(reqBodyFields[i][1]);
-          break;
-        case 'default':
-          break;
-      }
-    }
-    updateQuery += ` WHERE id = $${values.length + 1} RETURNING *`;
-    values.push(req.params.id);
-
-    const updatedTrade = await poolDB.query(updateQuery, values);
-
-    res.status(201).json({
-      message: 'Trade updated successfully.',
-      trade: {
-        id: updatedTrade.rows[0].id,
-        ticker: updatedTrade.rows[0].ticker,
-        amount: Number(updatedTrade.rows[0].amount),
-        price: Number(updatedTrade.rows[0].price),
-        executionType: updatedTrade.rows[0].executiontype,
-        executionDate: formatDate(updatedTrade.rows[0].executiondate),
-        userId: Number(updatedTrade.rows[0].userid),
-      },
-    });
   } catch (err) {
     return next(err);
   }
@@ -243,49 +188,26 @@ export const deleteTrade = async (
       throw error;
     }
 
-    let query = `SELECT t.*,u.name FROM Trades t INNER JOIN Users u on t.userid = u.id WHERE t.id = $1 ORDER BY 1 ASC`;
-    const queryResponse = await poolDB.query(query, [req.params.id]);
-    const trade = queryResponse.rows;
-    if (trade.length === 0) {
+    const trade = await Trade.findByPk(req.params.id);
+    if (trade === null) {
       res
         .status(200)
         .json({ message: `Trade with id: ${req.params.id} not found.` });
+    } else {
+      trade.destroy();
+      res.status(200).json({
+        message: 'Trade deleted successfully.',
+        trade: {
+          id: trade.id,
+          ticker: trade.ticker,
+          amount: Number(trade.amount),
+          price: Number(trade.price),
+          executionType: trade.executionType,
+          executionDate: formatDate(trade.executionDate),
+          userId: Number(trade.userId),
+        },
+      });
     }
-
-    //Make sure the userId of the Trade matches the userId in the DB
-    if (trade[0].userid !== req.body.userId) {
-      throw new CustomError(
-        401,
-        'User who does not own the trade cannot update the trade',
-        []
-      );
-    }
-
-    if (trade[0].executiondate < new Date()) {
-      throw new CustomError(
-        401,
-        'Trades that have Execution Date in the past cannot be updated',
-        []
-      );
-    }
-
-    const deletedTrade = await poolDB.query(
-      `DELETE FROM Trades WHERE id=$1 RETURNING *`,
-      [req.params.id]
-    );
-
-    res.status(201).json({
-      message: 'Trade deleted successfully.',
-      trade: {
-        id: deletedTrade.rows[0].id,
-        ticker: deletedTrade.rows[0].ticker,
-        amount: Number(deletedTrade.rows[0].amount),
-        price: Number(deletedTrade.rows[0].price),
-        executionType: deletedTrade.rows[0].executiontype,
-        executionDate: formatDate(deletedTrade.rows[0].executiondate),
-        userId: Number(deletedTrade.rows[0].userid),
-      },
-    });
   } catch (err) {
     return next(err);
   }

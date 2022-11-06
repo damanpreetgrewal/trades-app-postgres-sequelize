@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import asyncHandler from 'express-async-handler';
 import { validationResult } from 'express-validator';
-import { poolDB } from '../db/connection';
 import CustomError from '../customTypes/errorType';
 import { formatDate } from '../utils/formatDate';
+import Trade from '../models/trade';
 
 // @desc Get Trades Summary
 // @route GET /api/query
@@ -20,60 +20,46 @@ export const getTradesSummary = asyncHandler(
         );
         throw error;
       }
+      const { userId, executionType, executionStartDate, executionEndDate } =
+        req.body;
 
-      let query = `SELECT t.* FROM Trades t WHERE `;
-
-      const reqBodyFields = Object.entries(req.body);
-
-      const values = [];
-      if (reqBodyFields.length === 0) {
-        query = `SELECT t.* FROM Trades t ORDER BY 1 ASC`;
-      } else {
-        for (let i = 0; i < reqBodyFields.length; i++) {
-          switch (reqBodyFields[i][0]) {
-            case 'userId':
-              i == reqBodyFields.length - 1
-                ? (query += `userid = $${i + 1} `)
-                : (query += `userid = $${i + 1} AND `);
-              values.push(reqBodyFields[i][1]);
-              break;
-            case 'executionType':
-              i == reqBodyFields.length - 1
-                ? (query += `executiontype = $${i + 1}`)
-                : (query += `executiontype = $${i + 1} AND `);
-              values.push(reqBodyFields[i][1]);
-              break;
-            case 'executionStartDate':
-              i == reqBodyFields.length - 1
-                ? (query += `executiondate >= $${i + 1}`)
-                : (query += `executiondate >= $${i + 1} AND `);
-              values.push(reqBodyFields[i][1]);
-              break;
-            case 'executionEndDate':
-              i == reqBodyFields.length - 1
-                ? (query += `executiondate <= $${i + 1}`)
-                : (query += `executiondate <= $${i + 1} AND `);
-              values.push(reqBodyFields[i][1]);
-              break;
-            case 'default':
-              break;
-          }
-        }
+      const whereCondition: any = {};
+      if (userId) {
+        whereCondition['userId'] = userId;
       }
-      const response = await poolDB.query(query, values);
-      const trades = response.rows;
-      if (trades.length === 0) {
-        res.status(200).json({ message: 'No Trades found.' });
+      if (executionType) {
+        whereCondition['executionType'] = executionType;
       }
+      if (executionStartDate && executionEndDate) {
+        whereCondition['executionDate'] = {
+          $between: [
+            (executionStartDate),
+            (executionEndDate),
+          ],
+        };
+      } else if (executionStartDate && !executionEndDate) {
+        whereCondition['executionDate'] = {
+          $gte: executionStartDate,
+        };
+      } else if (!executionStartDate && executionEndDate) {
+        whereCondition['executionDate'] = {
+          $lte: executionEndDate,
+        };
+      }
+
+      console.log(whereCondition);
+
+      const trades = await Trade.findAll({ where: whereCondition });
+
       const transformedTrades = trades.map(trade => {
         return {
           id: trade.id,
           ticker: trade.ticker,
           amount: Number(trade.amount),
           price: Number(trade.price),
-          executionType: trade.executiontype,
-          executionDate: formatDate(trade.executiondate),
-          userId: Number(trade.userid),
+          executionType: trade.executionType,
+          executionDate: formatDate(trade.executionDate),
+          userId: Number(trade.userId),
         };
       });
 
