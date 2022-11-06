@@ -4,6 +4,7 @@ import { validationResult } from 'express-validator';
 import CustomError from '../customTypes/errorType';
 import { formatDate } from '../utils/formatDate';
 import Trade from '../models/trade';
+import { Op } from 'sequelize';
 
 // @desc Get Trades Summary
 // @route GET /api/query
@@ -32,18 +33,15 @@ export const getTradesSummary = asyncHandler(
       }
       if (executionStartDate && executionEndDate) {
         whereCondition['executionDate'] = {
-          $between: [
-            (executionStartDate),
-            (executionEndDate),
-          ],
+          [Op.between]: [executionStartDate, executionEndDate],
         };
       } else if (executionStartDate && !executionEndDate) {
         whereCondition['executionDate'] = {
-          $gte: executionStartDate,
+          [Op.gte]: executionStartDate,
         };
       } else if (!executionStartDate && executionEndDate) {
         whereCondition['executionDate'] = {
-          $lte: executionEndDate,
+          [Op.lte]: executionEndDate,
         };
       }
 
