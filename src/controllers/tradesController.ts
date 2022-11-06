@@ -1,9 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import asyncHandler from 'express-async-handler';
 import { validationResult } from 'express-validator';
-import { poolDB } from '../db/connection';
 import CustomError from '../customTypes/errorType';
 import { formatDate } from '../utils/formatDate';
+import User from '../models/User';
+import Trade from '../models/Trade';
+import { poolDB } from '../db/connection';
 
 // @desc Get all Trades
 // @route GET /api/trades
@@ -11,22 +13,21 @@ import { formatDate } from '../utils/formatDate';
 export const getTrades = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      let query = `SELECT t.*,u.name FROM Trades t INNER JOIN Users u on t.userid = u.id ORDER BY 1 ASC`;
-      const response = await poolDB.query(query);
-      const trades = response.rows;
+      const trades = await Trade.findAll();
+
       if (trades.length === 0) {
         res.status(200).json({ message: 'No Trades found.' });
       }
+
       const transformedTrades = trades.map(trade => {
         return {
           id: trade.id,
           ticker: trade.ticker,
           amount: Number(trade.amount),
           price: Number(trade.price),
-          executionType: trade.executiontype,
-          executionDate: formatDate(trade.executiondate),
-          userId: Number(trade.userid),
-          userName: trade.name,
+          executionType: trade.executionType,
+          executionDate: formatDate(trade.executionDate),
+          userId: Number(trade.userId),
         };
       });
 
@@ -43,28 +44,22 @@ export const getTrades = asyncHandler(
 export const getSingleTrade = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      let query = `SELECT t.*,u.name FROM Trades t INNER JOIN Users u on t.userid = u.id WHERE t.id=$1`;
-      const response = await poolDB.query(query, [req.params.id]);
-      const trades = response.rows;
-      if (trades.length === 0) {
+      const trade = await Trade.findByPk(req.params.id);
+      if (trade === null) {
         res
           .status(200)
           .json({ message: `Trade with id: ${req.params.id} not found.` });
-      }
-      const transformedTrades = trades.map(trade => {
-        return {
+      } else {
+        res.status(200).json({
           id: trade.id,
           ticker: trade.ticker,
           amount: Number(trade.amount),
           price: Number(trade.price),
-          executionType: trade.executiontype,
-          executionDate: formatDate(trade.executiondate),
-          userId: Number(trade.userid),
-          userName: trade.name,
-        };
-      });
-
-      res.status(200).json(transformedTrades);
+          executionType: trade.executionType,
+          executionDate: formatDate(trade.executionDate),
+          userId: Number(trade.userId),
+        });
+      }
     } catch (err) {
       return next(err);
     }
@@ -98,23 +93,19 @@ export const postTrade = async (
       req.body.userId,
     ];
 
-    const trade = await poolDB.query(
-      'INSERT INTO Trades(ticker, amount, price, executiontype, executiondate, userid) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-      values
-    );
-
-    res.status(201).json({
-      message: 'Trade posted successfully.',
-      trade: {
-        id: trade.rows[0].id,
-        ticker: trade.rows[0].ticker,
-        amount: Number(trade.rows[0].amount),
-        price: Number(trade.rows[0].price),
-        executionType: trade.rows[0].executiontype,
-        executionDate: formatDate(trade.rows[0].executiondate),
-        userId: Number(trade.rows[0].userid),
-      },
-    });
+    trade
+        .create({
+          name: req.body.name,
+        })
+        .then(user => {
+          res.status(201).json({
+            message: 'User posted successfully.',
+            user: {
+              id: user.id,
+              name: user.name,
+            },
+          });
+        });
   } catch (err) {
     return next(err);
   }

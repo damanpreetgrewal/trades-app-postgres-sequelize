@@ -3,8 +3,8 @@ import asyncHandler from 'express-async-handler';
 import { validationResult } from 'express-validator';
 import CustomError from '../customTypes/errorType';
 
-import user from '../models/user';
-import trade from '../models/trade';
+import user from '../models/User';
+import trade from '../models/Trade';
 
 // @desc Get All Users
 // @route GET /api/users

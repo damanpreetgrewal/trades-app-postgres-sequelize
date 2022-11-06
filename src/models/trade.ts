@@ -8,6 +8,7 @@ class Trade extends Model {
   amount!: number;
   price!: number;
   executionType!: string;
+  executionDate!: Date;
   userId!: number;
 }
 
@@ -24,24 +25,27 @@ Trade.init(
       allowNull: false,
     },
     amount: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.FLOAT,
       allowNull: false,
     },
     price: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.FLOAT,
       allowNull: false,
     },
     executionType: {
       type: DataTypes.STRING,
       allowNull: false,
+      field: 'execution_type',
     },
     executionDate: {
       type: DataTypes.DATE,
       allowNull: false,
+      field: 'execution_date',
     },
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      field: 'user_id',
     },
   },
   {

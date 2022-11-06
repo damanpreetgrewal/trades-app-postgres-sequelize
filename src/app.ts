@@ -14,8 +14,8 @@ import queryRoutes from './routes/queryRoutes';
 import userRoutes from './routes/userRoutes';
 import errorHandler from './middleware/errorMiddleware';
 
-import User from './models/user';
-import Trade from './models/trade';
+import User from './models/User';
+import Trade from './models/Trade';
 import sequelize from './utils/database';
 
 import { get404 } from './controllers/error';
