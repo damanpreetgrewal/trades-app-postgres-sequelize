@@ -67,6 +67,20 @@ router
           if (userData === null) {
             return Promise.reject(`User with id : ${value} doesnt exist`);
           }
+          const trade = Trade.findByPk(req?.params?.id).then(tradeData => {
+            if (tradeData?.userId !== value) {
+              return Promise.reject(
+                `User with id : ${value} is not the owner of this trade`
+              );
+            }
+            if (tradeData?.executionDate) {
+              if (tradeData.executionDate < new Date()) {
+                return Promise.reject(
+                  `Trade with executionDate in the past cannot be updated`
+                );
+              }
+            }
+          });
         });
       }),
       body('ticker')
@@ -107,6 +121,20 @@ router
           if (userData === null) {
             return Promise.reject(`User with id : ${value} doesnt exist`);
           }
+          const trade = Trade.findByPk(req?.params?.id).then(tradeData => {
+            if (tradeData?.userId !== value) {
+              return Promise.reject(
+                `User with id : ${value} is not the owner of this trade`
+              );
+            }
+            if (tradeData?.executionDate) {
+              if (tradeData.executionDate < new Date()) {
+                return Promise.reject(
+                  `Trade with executionDate in the past cannot be updated`
+                );
+              }
+            }
+          });
         });
       }),
     ],
