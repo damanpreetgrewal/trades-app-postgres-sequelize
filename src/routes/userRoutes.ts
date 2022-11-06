@@ -1,6 +1,5 @@
 import express, { Router } from 'express';
 import { body } from 'express-validator';
-
 import { getUsers, postUser } from '../controllers/usersController';
 
 const router: Router = express.Router();

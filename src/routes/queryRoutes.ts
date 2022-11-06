@@ -1,8 +1,7 @@
 import express, { Router } from 'express';
 import { check } from 'express-validator';
-
 import { getTradesSummary } from '../controllers/queryController';
-import { poolDB } from '../db/connection';
+import User from '../models/user';
 
 const router: Router = express.Router();
 
@@ -10,13 +9,11 @@ router.route('/').post(
   [
     check('userId')
       .custom(async (value, { req }) => {
-        return await poolDB
-          .query('SELECT * FROM Users WHERE id = $1', [value])
-          .then(userData => {
-            if (userData.rows.length === 0) {
-              return Promise.reject(`User with id : ${value} doesnt exist`);
-            }
-          });
+        return User.findByPk(value).then(userData => {
+          if (userData === null) {
+            return Promise.reject(`User with id : ${value} doesnt exist`);
+          }
+        });
       })
       .optional(),
     check('executionType')
