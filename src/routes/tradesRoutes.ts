@@ -44,7 +44,7 @@ router
         ),
       check('userId').custom(async (value, { req }) => {
         return await User.findByPk(value).then(userData => {
-          if (userData === null) {
+          if (!userData) {
             return Promise.reject(`User with id : ${value} doesnt exist`);
           }
         });
@@ -64,7 +64,7 @@ router
     [
       check('userId').custom(async (value, { req }) => {
         return await User.findByPk(value).then(userData => {
-          if (userData === null) {
+          if (!userData) {
             return Promise.reject(`User with id : ${value} doesnt exist`);
           }
           const trade = Trade.findByPk(req?.params?.id).then(tradeData => {
@@ -117,24 +117,26 @@ router
   .delete(
     [
       check('userId').custom(async (value, { req }) => {
-        return await User.findByPk(value).then(userData => {
-          if (userData === null) {
+        return await User.findByPk(value).then(async userData => {
+          if (!userData) {
             return Promise.reject(`User with id : ${value} doesnt exist`);
           }
-          const trade = Trade.findByPk(req?.params?.id).then(tradeData => {
-            if (tradeData?.userId !== value) {
-              return Promise.reject(
-                `User with id : ${value} is not the owner of this trade , only the owner can delete a trade.`
-              );
-            }
-            if (tradeData?.executionDate) {
-              if (tradeData.executionDate < new Date()) {
+          const trade = await Trade.findByPk(req?.params?.id).then(
+            tradeData => {
+              if (tradeData?.userId !== value) {
                 return Promise.reject(
-                  `Trade with executionDate in the past cannot be deleted.`
+                  `User with id : ${value} is not the owner of this trade , only the owner can delete a trade.`
                 );
               }
+              if (tradeData?.executionDate) {
+                if (tradeData.executionDate < new Date()) {
+                  return Promise.reject(
+                    `Trade with executionDate in the past cannot be deleted.`
+                  );
+                }
+              }
             }
-          });
+          );
         });
       }),
     ],

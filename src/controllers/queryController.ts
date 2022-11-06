@@ -31,6 +31,7 @@ export const getTradesSummary = asyncHandler(
       if (executionType) {
         whereCondition['executionType'] = executionType;
       }
+      
       if (executionStartDate && executionEndDate) {
         whereCondition['executionDate'] = {
           [Op.between]: [executionStartDate, executionEndDate],

@@ -68,11 +68,11 @@ router
             }
             const trade = trade_1.default.findByPk((_a = req === null || req === void 0 ? void 0 : req.params) === null || _a === void 0 ? void 0 : _a.id).then(tradeData => {
                 if ((tradeData === null || tradeData === void 0 ? void 0 : tradeData.userId) !== value) {
-                    return Promise.reject(`User with id : ${value} is not the owner of this trade.`);
+                    return Promise.reject(`User with id : ${value} is not the owner of this trade, only the owner can update a trade.`);
                 }
                 if (tradeData === null || tradeData === void 0 ? void 0 : tradeData.executionDate) {
                     if (tradeData.executionDate < new Date()) {
-                        return Promise.reject(`Trade with executionDate in the past cannot be updated.`);
+                        return Promise.reject(`Trade with execution Date in the past cannot be updated.`);
                     }
                 }
             });
@@ -107,22 +107,22 @@ router
 ], tradesController_1.updateTrade)
     .delete([
     (0, express_validator_1.check)('userId').custom((value, { req }) => __awaiter(void 0, void 0, void 0, function* () {
-        return yield user_1.default.findByPk(value).then(userData => {
+        return yield user_1.default.findByPk(value).then((userData) => __awaiter(void 0, void 0, void 0, function* () {
             var _a;
             if (userData === null) {
                 return Promise.reject(`User with id : ${value} doesnt exist`);
             }
-            const trade = trade_1.default.findByPk((_a = req === null || req === void 0 ? void 0 : req.params) === null || _a === void 0 ? void 0 : _a.id).then(tradeData => {
+            const trade = yield trade_1.default.findByPk((_a = req === null || req === void 0 ? void 0 : req.params) === null || _a === void 0 ? void 0 : _a.id).then(tradeData => {
                 if ((tradeData === null || tradeData === void 0 ? void 0 : tradeData.userId) !== value) {
-                    return Promise.reject(`User with id : ${value} is not the owner of this trade`);
+                    return Promise.reject(`User with id : ${value} is not the owner of this trade , only the owner can delete a trade.`);
                 }
                 if (tradeData === null || tradeData === void 0 ? void 0 : tradeData.executionDate) {
                     if (tradeData.executionDate < new Date()) {
-                        return Promise.reject(`Trade with executionDate in the past cannot be deleted`);
+                        return Promise.reject(`Trade with executionDate in the past cannot be deleted.`);
                     }
                 }
             });
-        });
+        }));
     })),
 ], tradesController_1.deleteTrade);
 exports.default = router;
