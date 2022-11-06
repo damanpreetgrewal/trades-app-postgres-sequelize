@@ -45,8 +45,6 @@ export const getTradesSummary = asyncHandler(
         };
       }
 
-      console.log(whereCondition);
-
       const trades = await Trade.findAll({ where: whereCondition });
 
       const transformedTrades = trades.map(trade => {
