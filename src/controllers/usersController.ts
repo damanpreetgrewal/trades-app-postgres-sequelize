@@ -4,7 +4,7 @@ import { validationResult } from 'express-validator';
 import CustomError from '../customTypes/errorType';
 
 import user from '../models/user';
-import trade from '../models/trade';
+ 
 
 // @desc Get All Users
 // @route GET /api/users
